@@ -1,0 +1,1 @@
+ERC1967_UPGRADE_EVENT_ABI = '{"anonymous":false,"inputs":[{"indexed":true,"internalType":"address","name":"implementation","type":"address"}],"name":"Upgraded","type":"event"}'

@@ -127,3 +127,10 @@ dmypy.json
 
 # Pyre type checker
 .pyre/
+
+# Forta things
+node_modules
+dist
+forta.config.json
+__pycache__
+.pytest_cache
