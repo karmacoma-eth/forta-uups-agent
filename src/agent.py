@@ -6,11 +6,21 @@ https://forum.openzeppelin.com/t/uupsupgradeable-vulnerability-post-mortem/15680
 '''
 
 from forta_agent import Finding, FindingType, FindingSeverity, get_web3_provider
-from constants import ERC1967_UPGRADE_EVENT_ABI
+from .constants import ERC1967_UPGRADE_EVENT_ABI
 
-web3 = get_web3_provider()
+# a wrapper for web3 to make it easier to mock
+class Web3Provider:
+    def __init__(self):
+        self.web3 = get_web3_provider()
 
-def handle_transaction(transaction_event):
+    def toChecksumAddress(self, address):
+        return self.web3.toChecksumAddress(address)
+
+    def get_code(self, address, block_identifier=None):
+        return self.web3.eth.get_code(address, block_identifier)
+
+
+def handle_transaction(transaction_event, web3=Web3Provider()):
     '''Look for Upgraded(address) events coming from an address that no longer contains code'''
     findings = []
     upgrade_events = transaction_event.filter_log(ERC1967_UPGRADE_EVENT_ABI)
@@ -21,7 +31,7 @@ def handle_transaction(transaction_event):
         # Retrieve the code at the old implementation address as it was in the block of the event.
         # If we retrieve it at the current block, we may get a false positive (if the contract
         # was later destroyed but not because of this upgrade)
-        old_impl_code = web3.eth.get_code(old_impl_address, block_identifier=event.blockNumber)
+        old_impl_code = web3.get_code(old_impl_address, block_identifier=event.blockNumber)
 
         if not old_impl_code:
             new_impl_address = web3.toChecksumAddress(event.args.implementation)
